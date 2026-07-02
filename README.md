@@ -22,11 +22,16 @@
 # 安装依赖
 pip install -e ".[dev]"
 
+# 配置 AI API（可选，用于 AI 辅助调研功能）
+export AI_API_KEY="你的API密钥"
+
 # 启动服务
 uvicorn app.main:app --reload
 
 # 访问 http://localhost:8000
 ```
+
+> 💡 AI 辅助调研功能需要配置兼容 OpenAI 格式的 API 密钥。如果不配置，其他功能仍可正常使用。
 
 ## 项目结构
 
