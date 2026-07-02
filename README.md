@@ -22,8 +22,8 @@
 # 安装依赖
 pip install -e ".[dev]"
 
-# 配置 AI API（可选，用于 AI 辅助调研功能）
-export AI_API_KEY="你的API密钥"
+# 配置环境变量（复制 .env.example 为 .env 并填入你的配置）
+cp .env.example .env
 
 # 启动服务
 uvicorn app.main:app --reload
@@ -31,7 +31,24 @@ uvicorn app.main:app --reload
 # 访问 http://localhost:8000
 ```
 
-> 💡 AI 辅助调研功能需要配置兼容 OpenAI 格式的 API 密钥。如果不配置，其他功能仍可正常使用。
+## 环境变量配置
+
+在项目根目录创建 `.env` 文件：
+
+```bash
+# AI API 配置（用于 AI 辅助调研功能）
+AI_API_KEY=你的API密钥
+AI_API_URL=https://your-api-endpoint.com/v1/chat/completions
+AI_MODEL=你的模型名称
+```
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `AI_API_KEY` | API 密钥 | 空（不配置则 AI 功能不可用） |
+| `AI_API_URL` | API 地址 | `https://token-plan-cn.xiaomimimo.com/v1/chat/completions` |
+| `AI_MODEL` | 模型名称 | `mimo-v2.5` |
+
+> 💡 AI 辅助调研功能需要配置兼容 OpenAI 格式的 API。如果不配置，其他功能仍可正常使用。
 
 ## 项目结构
 

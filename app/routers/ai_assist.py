@@ -13,6 +13,7 @@ router = APIRouter()
 
 AI_API_URL = os.getenv("AI_API_URL", "https://token-plan-cn.xiaomimimo.com/v1/chat/completions")
 AI_API_KEY = os.getenv("AI_API_KEY", "")
+AI_MODEL = os.getenv("AI_MODEL", "mimo-v2.5")
 
 
 class AiAssistRequest(BaseModel):
@@ -111,7 +112,7 @@ async def ai_assist(req: AiAssistRequest, db: Session = Depends(get_db)):
             AI_API_URL,
             headers={"Authorization": f"Bearer {AI_API_KEY}"},
             json={
-                "model": "mimo-v2.5",
+                "model": AI_MODEL,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": req.prompt},
