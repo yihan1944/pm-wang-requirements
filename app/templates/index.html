@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}项目列表{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>我的项目</h1>
+    <a href="/projects/new" class="btn btn-primary">+ 新建项目</a>
+</div>
+{% if projects %}
+<div class="card-list">
+    {% for p in projects %}
+    <a href="/projects/{{ p.id }}" class="card">
+        <h3>{{ p.name }}</h3>
+        <p class="text-muted">{{ p.description or '暂无描述' }}</p>
+        <p class="text-sm text-muted">{{ p.created_at.strftime('%Y-%m-%d') }}</p>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>还没有分析项目</p>
+    <a href="/projects/new" class="btn btn-primary">创建第一个项目</a>
+</div>
+{% endif %}
+{% endblock %}

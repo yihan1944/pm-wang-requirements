@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 需求说明{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>需求说明（最终输出）</h1>
+    <div class="actions">
+        <a href="/projects/{{ project.id }}/export" class="btn btn-outline">导出 Markdown</a>
+        <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+    </div>
+</div>
+
+<p class="text-muted">本部分是对分析结论的综合与判断，而非简单摘抄。每节需体现新增判断。</p>
+
+{% if docs %}
+<div class="req-docs">
+    {% for d in docs %}
+    <div class="req-card">
+        <div class="req-header">
+            <h3>{{ d.section }}{% if d.subsection %} — {{ d.subsection }}{% endif %}</h3>
+            <button class="btn-icon" hx-post="/projects/{{ project.id }}/requirement/{{ d.id }}/delete"
+                    hx-confirm="确定删除？" hx-target="closest .req-card" hx-swap="outerHTML">✕</button>
+        </div>
+        <div class="req-content">{{ d.content }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form hx-post="/projects/{{ project.id }}/requirement" hx-swap="none"
+      class="form-card" _="on htmx:afterRequest reset() me">
+    <div class="form-group">
+        <label>章节</label>
+        <select name="section">
+            <option value="项目背景">一、项目背景</option>
+            <option value="目标用户分析">二、目标用户分析</option>
+            <option value="用户场景分析">三、用户场景分析</option>
+            <option value="用户需求与洞察">四、用户需求与洞察</option>
+            <option value="用户痛点分析">五、用户痛点分析</option>
+            <option value="产品机会分析">六、产品机会分析</option>
+            <option value="需求总结">七、需求总结</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>子标题（可选）</label>
+        <input name="subsection" placeholder="子标题">
+    </div>
+    <div class="form-group">
+        <label>内容</label>
+        <textarea name="content" rows="6" required placeholder="综合判断内容（支持 Markdown）"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">添加</button>
+</form>
+{% endblock %}

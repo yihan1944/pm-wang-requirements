@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 动机{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>三、动机（Job）</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<h2>JTBD</h2>
+{% if jobs %}
+<div class="jtbd-list">
+    {% for j in jobs %}
+    <div class="jtbd-card">
+        {% if j.scene %}<p class="text-muted text-sm">📌 场景：{{ j.scene.name }}</p>{% endif %}
+        <p>当 <strong>{{ j.when or '___' }}</strong> 的时候，</p>
+        <p>我希望 <strong>{{ j.i_want or '___' }}</strong>，</p>
+        <p>从而能够 <strong>{{ j.so_that or '___' }}</strong>。</p>
+        {% if j.evidence %}<p class="text-muted text-sm">证据：{{ j.evidence }}</p>{% endif %}
+        <button class="btn-icon" hx-post="/projects/{{ project.id }}/job/jtbd/{{ j.id }}/delete"
+                hx-confirm="确定删除？" hx-target="closest .jtbd-card" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('jtbd-form')">+ 添加 JTBD</button>
+    <button class="btn btn-primary btn-sm" onclick="openAiDialog('job')">🤖 AI 辅助调研</button>
+</div>
+
+<div id="jtbd-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/job/jtbd" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('jtbd-form').classList.add('hidden'); location.reload()">
+        <div class="form-row">
+            <select name="scene_id">
+                <option value="0">-- 关联场景（可选）--</option>
+                {% for s in scenes %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <input name="when" placeholder="当___的时候" class="input-wide">
+        <input name="i_want" placeholder="我希望___" class="input-wide">
+        <input name="so_that" placeholder="从而能够___" class="input-wide">
+        <input name="evidence" placeholder="证据/来源">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('jtbd-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>用户核心目标</h2>
+{% if goals %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>优先级</th><th>目标</th><th>证据</th><th></th></tr></thead>
+        <tbody>
+            {% for g in goals %}
+            <tr>
+                <td><span class="badge">{{ g.priority }}</span></td>
+                <td>{{ g.goal }}</td><td>{{ g.evidence or '' }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/job/goal/{{ g.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('goal-form')">+ 添加目标</button>
+</div>
+
+<div id="goal-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/job/goal" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('goal-form').classList.add('hidden'); location.reload()">
+        <select name="priority"><option value="P0">P0</option><option value="P1">P1</option><option value="P2">P2</option></select>
+        <input name="goal" placeholder="用户目标" class="input-wide" required>
+        <input name="evidence" placeholder="证据/来源">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('goal-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>需求分类</h2>
+{% if needs %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>类型</th><th>内容</th><th></th></tr></thead>
+        <tbody>
+            {% for n in needs %}
+            <tr>
+                <td>{{ n.need_type }}</td><td>{{ n.content }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/job/need/{{ n.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('need-form')">+ 添加需求</button>
+</div>
+
+<div id="need-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/job/need" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('need-form').classList.add('hidden'); location.reload()">
+        <select name="need_type">
+            <option value="功能需求">功能需求</option>
+            <option value="效率需求">效率需求</option>
+            <option value="情绪需求">情绪需求</option>
+            <option value="社交需求">社交需求</option>
+            <option value="成长需求">成长需求</option>
+        </select>
+        <input name="content" placeholder="需求内容" class="input-wide" required>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('need-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+{% include "sections/_ai_dialog.html" %}
+
+<script>
+aiFieldMap['job'] = {when:'当...的时候', i_want:'我希望...', so_that:'从而能够...', evidence:'证据/来源'};
+aiPlaceholders['job'] = '例如：用户想在碎片时间学习诗歌...';
+
+// 场景数据（供 AI 生成时注入背景）
+scenesData = [
+    {% for s in scenes %}
+    {id: {{ s.id }}, name: '{{ s.name|e }}', time_desc: '{{ s.time_desc|e }}', location: '{{ s.location|e }}', trigger_event: '{{ s.trigger_event|e }}', user_behavior: '{{ s.user_behavior|e }}', user_goal: '{{ s.user_goal|e }}'},
+    {% endfor %}
+];
+</script>
+{% endblock %}

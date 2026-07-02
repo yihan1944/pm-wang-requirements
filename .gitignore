@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Exports
+exports/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+test_*.txt
+readme.txt
+
+# Development files
+AGENTS.md
+CLAUDE.md

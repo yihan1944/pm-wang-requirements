@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{{ project.name }}</h1>
+        {% if project.description %}
+        <p class="project-desc">{{ project.description }}</p>
+        {% endif %}
+    </div>
+    <div class="actions">
+        <a href="/projects/{{ project.id }}/export" class="btn btn-primary">导出 Markdown</a>
+        <form method="post" action="/projects/{{ project.id }}/delete" style="display:inline"
+              onsubmit="return confirm('确定删除该项目？')">
+            <button type="submit" class="btn btn-danger">删除项目</button>
+        </form>
+    </div>
+</div>
+
+<div class="section-grid">
+    {% for key, sec in completion.sections.items() %}
+    <a href="/projects/{{ project.id }}/{{ key }}" class="section-card">
+        <h3>{{ sec.label }}</h3>
+        <span class="card-count">{{ sec["items"] }}{% if sec.issues %} · {{ sec.issues|length }} 项待处理{% endif %}</span>
+        {% if sec.issues %}
+        <ul class="issue-list">
+            {% for issue in sec.issues[:2] %}
+            <li>{{ issue }}</li>
+            {% endfor %}
+            {% if sec.issues|length > 2 %}
+            <li class="text-muted">还有 {{ sec.issues|length - 2 }} 项…</li>
+            {% endif %}
+        </ul>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

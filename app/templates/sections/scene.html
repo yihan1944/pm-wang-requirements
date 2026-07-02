@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 场景{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>二、场景（Scene）</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<h2>核心使用场景</h2>
+{% if scenarios %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>场景名称</th><th>关联用户</th><th>时间</th><th>地点</th><th>触发事件</th><th>频率</th><th>用户行为</th><th>用户目标</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for s in scenarios %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td>{% if s.target_user %}<span class="badge">{{ s.target_user.target_user or '用户' }}</span>{% else %}-{% endif %}</td>
+                <td>{{ s.time_desc or '' }}</td><td>{{ s.location or '' }}</td>
+                <td>{{ s.trigger_event or '' }}</td><td>{{ s.frequency or '' }}</td>
+                <td>{{ s.user_behavior or '' }}</td><td>{{ s.user_goal or '' }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/scene/scenario/{{ s.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('scenario-form')">+ 添加场景</button>
+    <button class="btn btn-primary btn-sm" onclick="openAiDialog('scene')">🤖 AI 辅助调研</button>
+</div>
+
+<div id="scenario-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/scene/scenario" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('scenario-form').classList.add('hidden'); location.reload()">
+        <div class="form-row">
+            <input name="name" placeholder="场景名称" required class="input-wide">
+            <select name="target_user_id">
+                <option value="0">-- 选择用户画像（可选）--</option>
+                {% for p in profiles %}
+                <option value="{{ p.id }}">{{ p.target_user or '用户 #' ~ p.id }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <input name="time_desc" placeholder="时间">
+            <input name="location" placeholder="地点">
+            <input name="trigger_event" placeholder="触发事件" class="input-wide">
+            <input name="frequency" placeholder="频率">
+        </div>
+        <div class="form-row">
+            <input name="user_behavior" placeholder="用户行为" class="input-wide">
+            <input name="user_goal" placeholder="用户目标" class="input-wide">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('scenario-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>用户行为路径</h2>
+{% if paths %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>顺序</th><th>路径节点</th><th>流失风险</th><th>替代动作</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for p in paths %}
+            <tr>
+                <td>{{ p.step_order }}</td><td>{{ p.step_name }}</td>
+                <td>{{ p.churn_risk or '' }}</td><td>{{ p.alternative_actions or '' }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/scene/path/{{ p.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('path-form')">+ 添加行为路径</button>
+</div>
+
+<div id="path-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/scene/path" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('path-form').classList.add('hidden'); location.reload()">
+        <input name="step_order" type="number" placeholder="顺序" min="1" style="width:60px">
+        <select name="step_name">
+            <option value="触发需求">触发需求</option>
+            <option value="寻找解决方案">寻找解决方案</option>
+            <option value="选择产品">选择产品</option>
+            <option value="使用产品">使用产品</option>
+            <option value="完成目标">完成目标</option>
+        </select>
+        <input name="churn_risk" placeholder="流失风险" class="input-wide">
+        <input name="alternative_actions" placeholder="替代动作" class="input-wide">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('path-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+{% include "sections/_ai_dialog.html" %}
+
+<script>
+aiFieldMap['scene'] = {name:'场景名称', time_desc:'时间', location:'地点', trigger_event:'触发事件', frequency:'频率', user_behavior:'用户行为', user_goal:'用户目标'};
+aiPlaceholders['scene'] = '例如：用户在通勤路上想听诗歌...';
+
+// 用户画像数据（供 AI 生成时注入背景）
+profilesData = [
+    {% for p in profiles %}
+    {id: {{ p.id }}, target_user: '{{ p.target_user|e }}', age: '{{ p.age|e }}', gender: '{{ p.gender|e }}', occupation: '{{ p.occupation|e }}', income: '{{ p.income|e }}', region: '{{ p.region|e }}', typical_traits: '{{ p.typical_traits|e }}'},
+    {% endfor %}
+];
+</script>
+{% endblock %}

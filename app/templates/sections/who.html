@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 用户{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>一、用户（Who）</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<h2>用户画像</h2>
+{% if profiles %}
+<div class="jtbd-list">
+    {% for p in profiles %}
+    <div class="jtbd-card profile-card">
+        <div class="card-field-row">
+            <span class="card-label">目标用户</span><span>{{ p.target_user or '' }}</span>
+        </div>
+        <div class="card-field-row">
+            <span class="card-label">年龄</span><span>{{ p.age or '' }}</span>
+            <span class="card-label">性别</span><span>{{ p.gender or '' }}</span>
+            <span class="card-label">职业</span><span>{{ p.occupation or '' }}</span>
+            <span class="card-label">收入</span><span>{{ p.income or '' }}</span>
+        </div>
+        <div class="card-field-row">
+            <span class="card-label">地域</span><span>{{ p.region or '' }}</span>
+            <span class="card-label">数字化能力</span><span>{{ p.digital_ability or '' }}</span>
+            <span class="card-label">消费能力</span><span>{{ p.spending_power or '' }}</span>
+        </div>
+        <div class="card-field-row">
+            <span class="card-label">典型特征</span><span>{{ p.typical_traits or '' }}</span>
+        </div>
+        <div class="card-field-row">
+            <span class="card-label">证据/来源</span><span>{{ p.evidence or '' }}</span>
+            <span class="card-label">状态</span><span class="badge">{{ p.status }}</span>
+        </div>
+        <button class="btn-icon" hx-post="/projects/{{ project.id }}/who/profile/{{ p.id }}/delete"
+                hx-confirm="确定删除？" hx-target="closest .jtbd-card" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('profile-form')">+ 添加用户画像</button>
+    <button class="btn btn-primary btn-sm" onclick="openAiDialog('who_profile')">🤖 AI 辅助调研</button>
+</div>
+
+<div id="profile-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/who/profile" hx-swap="none"
+          class="form-card mt-1"
+          hx-on::after-request="document.getElementById('profile-form').classList.add('hidden'); location.reload()">
+        <div class="form-row">
+            <input name="target_user" placeholder="一句话描述目标用户" class="input-wide">
+        </div>
+        <div class="form-row">
+            <input name="age" placeholder="年龄">
+            <input name="gender" placeholder="性别">
+            <input name="occupation" placeholder="职业">
+            <input name="income" placeholder="收入">
+            <input name="region" placeholder="地域">
+        </div>
+        <div class="form-row">
+            <input name="digital_ability" placeholder="数字化能力">
+            <input name="spending_power" placeholder="消费能力">
+            <input name="typical_traits" placeholder="典型特征" class="input-wide">
+        </div>
+        <div class="form-row">
+            <input name="evidence" placeholder="证据/来源" class="input-wide">
+            <select name="status">
+                <option value="假设">假设</option>
+                <option value="待验证">待验证</option>
+                <option value="已验证">已验证</option>
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('profile-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>用户分层</h2>
+{% if segments %}
+<div class="jtbd-list">
+    {% for s in segments %}
+    <div class="jtbd-card">
+        <div class="card-field-row">
+            <span class="card-label">用户类型</span><span>{{ s.user_type }}</span>
+            <span class="card-label">优先级</span><span class="badge">{{ s.priority or '' }}</span>
+        </div>
+        <div class="card-field-row">
+            <span class="card-label">特征</span><span>{{ s.traits or '' }}</span>
+        </div>
+        <div class="card-field-row">
+            <span class="card-label">占比</span><span>{{ s.proportion or '' }}</span>
+            <span class="card-label">证据/来源</span><span>{{ s.evidence or '' }}</span>
+        </div>
+        <button class="btn-icon" hx-post="/projects/{{ project.id }}/who/segment/{{ s.id }}/delete"
+                hx-confirm="确定删除？" hx-target="closest .jtbd-card" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('segment-form')">+ 添加用户分层</button>
+    <button class="btn btn-primary btn-sm" onclick="openAiDialog('who_segment')">🤖 AI 辅助调研</button>
+</div>
+
+<div id="segment-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/who/segment" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('segment-form').classList.add('hidden'); location.reload()">
+        <div class="form-row">
+            <select name="user_type">
+                <option value="核心用户">核心用户</option>
+                <option value="重要用户">重要用户</option>
+                <option value="潜在用户">潜在用户</option>
+            </select>
+            <input name="traits" placeholder="特征" class="input-wide">
+            <input name="proportion" placeholder="占比">
+            <select name="priority"><option value="">优先级</option><option>P0</option><option>P1</option><option>P2</option></select>
+            <input name="evidence" placeholder="证据/来源" class="input-wide">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('segment-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+{% include "sections/_ai_dialog.html" %}
+
+<script>
+aiFieldMap['who_profile'] = {target_user:'目标用户',age:'年龄',gender:'性别',occupation:'职业',income:'收入',region:'地域',digital_ability:'数字化能力',spending_power:'消费能力',typical_traits:'典型特征',evidence:'证据/来源',status:'状态'};
+aiFieldMap['who_segment'] = {user_type:'用户类型',traits:'特征',proportion:'占比',priority:'优先级',evidence:'证据/来源'};
+aiPlaceholders['who_profile'] = '例如：目标用户是一线城市25-35岁年轻白领，追求品质生活，经常使用小程序...';
+aiPlaceholders['who_segment'] = '例如：分析诗歌类小程序的核心用户群体特征...';
+</script>
+{% endblock %}

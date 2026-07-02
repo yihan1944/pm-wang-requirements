@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 研究说明{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>零、研究说明</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<p class="text-muted">说明本次分析的研究方法、数据来源，以及关键指标的评分锚点定义。</p>
+
+<form hx-post="/projects/{{ project.id }}/research" hx-swap="none"
+      class="form-card" hx-on::after-request="document.getElementById('save-msg').textContent='保存成功'; setTimeout(()=>document.getElementById('save-msg').textContent='',1500)">
+    <div class="form-group">
+        <label>研究方法与数据来源</label>
+        <textarea name="research_methods" rows="6" class="input-wide"
+                  placeholder="例如：用户访谈 N=15，问卷 N=320，竞品体验，行业报告...">{{ project.research_methods or '' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>评分锚点定义</label>
+        <textarea name="scoring_anchors" rows="6" class="input-wide"
+                  placeholder="例如：高=影响核心流程且频率≥每周；中=影响次要功能或频率每月；低=边缘场景...">{{ project.scoring_anchors or '' }}</textarea>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <span id="save-msg"></span>
+    </div>
+</form>
+{% endblock %}

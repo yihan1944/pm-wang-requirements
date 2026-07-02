@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 痛点{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>四、痛点（Pain）</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<h2>用户痛点</h2>
+{% if pains %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>流程阶段</th><th>当前行为</th><th>问题</th><th>严重程度</th><th>发生频率</th><th>根本原因</th><th>用户影响</th><th>证据</th><th>状态</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for p in pains %}
+            <tr>
+                <td>{{ p.flow_stage or '' }}</td><td>{{ p.current_behavior or '' }}</td>
+                <td>{{ p.problem or '' }}</td>
+                <td><span class="badge severity-{{ p.severity }}">{{ p.severity }}</span></td>
+                <td><span class="badge freq-{{ p.frequency }}">{{ p.frequency }}</span></td>
+                <td>{{ p.root_cause or '' }}</td><td>{{ p.user_impact or '' }}</td>
+                <td>{{ p.evidence or '' }}</td>
+                <td><span class="badge">{{ p.status }}</span></td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/pain/point/{{ p.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('pain-form')">+ 添加痛点</button>
+</div>
+
+<div id="pain-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/pain/point" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('pain-form').classList.add('hidden'); location.reload()">
+        <div class="form-row">
+            <input name="flow_stage" placeholder="流程阶段，如：搜索诗歌、阅读诗歌">
+            <input name="current_behavior" placeholder="当前行为，如：在百度搜索诗歌关键词" class="input-wide">
+            <input name="problem" placeholder="存在问题，如：搜索结果杂乱，找不到合适的内容" class="input-wide">
+        </div>
+        <div class="form-row">
+            <select name="severity"><option value="高">严重-高（直接导致放弃）</option><option value="中" selected>严重-中（明显不满但继续用）</option><option value="低">严重-低（轻微不便）</option></select>
+            <select name="frequency"><option value="高">频率-高（每次使用都遇到）</option><option value="中" selected>频率-中（偶尔遇到）</option><option value="低">频率-低（极端情况才遇到）</option></select>
+            <input name="root_cause" placeholder="根本原因，如：缺乏优质内容聚合" class="input-wide">
+            <input name="user_impact" placeholder="用户影响，如：浪费时间，体验差" class="input-wide">
+            <input name="evidence" placeholder="证据/来源，如：用户访谈 #5">
+            <select name="status"><option value="假设">假设</option><option value="待验证">待验证</option><option value="已验证">已验证</option></select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('pain-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>竞品与替代方案</h2>
+{% if competitors %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>替代方案</th><th>解决方式</th><th>优势</th><th>局限</th><th>满意度</th><th></th></tr></thead>
+        <tbody>
+            {% for c in competitors %}
+            <tr>
+                <td>{{ c.name }}</td><td>{{ c.solution or '' }}</td>
+                <td>{{ c.advantages or '' }}</td><td>{{ c.limitations or '' }}</td>
+                <td><span class="badge">{{ c.satisfaction or '' }}</span></td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/pain/competitor/{{ c.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('competitor-form')">+ 添加竞品</button>
+</div>
+
+<div id="competitor-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/pain/competitor" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('competitor-form').classList.add('hidden'); location.reload()">
+        <input name="name" placeholder="替代方案名称" required>
+        <input name="solution" placeholder="解决方式" class="input-wide">
+        <input name="advantages" placeholder="优势">
+        <input name="limitations" placeholder="局限">
+        <select name="satisfaction"><option value="高">满意-高</option><option value="中" selected>满意-中</option><option value="低">满意-低</option></select>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('competitor-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>未满足需求</h2>
+{% if unmet %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>需求</th><th>当前替代方案</th><th>满足程度</th><th>证据</th><th></th></tr></thead>
+        <tbody>
+            {% for u in unmet %}
+            <tr>
+                <td>{{ u.need }}</td><td>{{ u.current_alternative or '' }}</td>
+                <td><span class="badge">{{ u.satisfaction }}</span></td><td>{{ u.evidence or '' }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/pain/unmet/{{ u.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('unmet-form')">+ 添加未满足需求</button>
+</div>
+
+<div id="unmet-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/pain/unmet" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('unmet-form').classList.add('hidden'); location.reload()">
+        <input name="need" placeholder="未满足需求" class="input-wide" required>
+        <input name="current_alternative" placeholder="当前替代方案" class="input-wide">
+        <select name="satisfaction"><option value="高">满足-高</option><option value="中">满足-中</option><option value="低" selected>满足-低</option></select>
+        <input name="evidence" placeholder="证据/来源">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('unmet-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+{% include "sections/_ai_dialog.html" %}
+
+<script>
+aiFieldMap['pain'] = {pain_point:'痛点描述', severity:'严重程度', frequency:'发生频率', affected_users:'受影响用户群', current_solution:'当前解决方案', status:'状态'};
+aiPlaceholders['pain'] = '例如：用户找不到合适的诗歌学习资源...';
+</script>
+{% endblock %}

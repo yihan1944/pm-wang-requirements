@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 机会{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>六、机会（Opportunity）</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<h2>产品机会点</h2>
+{% if opportunities %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>机会点</th><th>来源洞察</th><th>对应痛点</th><th>用户价值</th><th>商业价值</th><th>优先级</th><th>状态</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for o in opportunities %}
+            <tr>
+                <td>{{ o.opportunity }}</td><td>{{ o.source_insight or '' }}</td>
+                <td>{{ o.related_pain or '' }}</td>
+                <td><span class="badge">{{ o.user_value }}</span></td>
+                <td><span class="badge">{{ o.business_value }}</span></td>
+                <td><span class="badge">{{ o.priority }}</span></td>
+                <td><span class="badge">{{ o.status }}</span></td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/opportunity/point/{{ o.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('opp-form')">+ 添加机会点</button>
+</div>
+
+<div id="opp-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/opportunity/point" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('opp-form').classList.add('hidden'); location.reload()">
+        <div class="form-group">
+            <label>机会点</label>
+            <input name="opportunity" placeholder="如：提供碎片化诗歌学习功能" class="input-wide" required>
+        </div>
+        <div class="form-group">
+            <label>来源洞察（可多选）</label>
+            <select name="source_insight" multiple size="3" class="input-wide">
+                {% for i in insights %}
+                <option value="{{ i.insight }}">#{{ loop.index }} {{ i.insight }}</option>
+                {% endfor %}
+            </select>
+            <span class="text-sm text-muted">按住 Ctrl 可多选</span>
+        </div>
+        <div class="form-group">
+            <label>对应痛点（可多选）</label>
+            <select name="related_pain" multiple size="3" class="input-wide">
+                {% for p in pains %}
+                <option value="{{ p.problem }}">#{{ loop.index }} {{ p.problem }}</option>
+                {% endfor %}
+            </select>
+            <span class="text-sm text-muted">按住 Ctrl 可多选</span>
+        </div>
+        <div class="form-row">
+            <select name="user_value"><option value="高">用户价值-高</option><option value="中" selected>用户价值-中</option><option value="低">用户价值-低</option></select>
+            <select name="business_value"><option value="高">商业价值-高</option><option value="中" selected>商业价值-中</option><option value="低">商业价值-低</option></select>
+            <select name="priority"><option value="P0">P0</option><option value="P1" selected>P1</option><option value="P2">P2</option></select>
+            <select name="status"><option value="假设">假设</option><option value="待验证">待验证</option><option value="已验证">已验证</option></select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('opp-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>产品能力建议</h2>
+{% if capabilities %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>方向</th><th>建议方案</th><th></th></tr></thead>
+        <tbody>
+            {% for c in capabilities %}
+            <tr>
+                <td>{{ c.direction }}</td><td>{{ c.suggestion }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/opportunity/capability/{{ c.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('cap-form')">+ 添加能力建议</button>
+</div>
+
+<div id="cap-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/opportunity/capability" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('cap-form').classList.add('hidden'); location.reload()">
+        <select name="direction">
+            <option value="核心功能">核心功能</option>
+            <option value="体验优化">体验优化</option>
+            <option value="增值服务">增值服务</option>
+        </select>
+        <input name="suggestion" placeholder="如：支持离线下载诗歌音频" class="input-wide" required>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('cap-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<h2>MVP 建议</h2>
+{% if mvps %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>功能</th><th>目标</th><th>验证指标</th><th></th></tr></thead>
+        <tbody>
+            {% for m in mvps %}
+            <tr>
+                <td>{{ m.feature }}</td><td>{{ m.goal or '' }}</td><td>{{ m.validation_metric or '' }}</td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/opportunity/mvp/{{ m.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('mvp-form')">+ 添加 MVP</button>
+</div>
+
+<div id="mvp-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/opportunity/mvp" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('mvp-form').classList.add('hidden'); location.reload()">
+        <input name="feature" placeholder="如：每日诗歌推荐" class="input-wide" required>
+        <input name="goal" placeholder="如：验证用户是否有每日学习诗歌的习惯" class="input-wide">
+        <input name="validation_metric" placeholder="如：7日留存率 > 30%" class="input-wide">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('mvp-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleAndScroll(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('hidden');
+    if (!el.classList.contains('hidden')) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    }
+}
+</script>
+{% endblock %}

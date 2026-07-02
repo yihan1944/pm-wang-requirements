@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — 洞察{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>五、洞察（Insight）</h1>
+    <a href="/projects/{{ project.id }}" class="btn btn-ghost">← 返回概览</a>
+</div>
+
+<p class="text-muted">将碎片化痛点归纳为关键判断，作为机会点的推导依据。</p>
+
+{% if insights %}
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>洞察</th><th>支撑痛点</th><th>洞察含义</th><th>状态</th><th></th></tr></thead>
+        <tbody>
+            {% for i in insights %}
+            <tr>
+                <td>{{ i.insight }}</td><td>{{ i.supporting_pains or '' }}</td>
+                <td>{{ i.meaning or '' }}</td>
+                <td><span class="badge">{{ i.status }}</span></td>
+                <td>
+                    <button class="btn-icon" hx-post="/projects/{{ project.id }}/insight/{{ i.id }}/delete"
+                            hx-confirm="确定删除？" hx-target="closest tr" hx-swap="outerHTML">✕</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="form-row">
+    <button class="btn btn-outline btn-sm" onclick="toggleAndScroll('insight-form')">+ 添加洞察</button>
+</div>
+
+<div id="insight-form" class="hidden">
+    <form hx-post="/projects/{{ project.id }}/insight" hx-swap="none"
+          class="form-inline mt-1"
+          hx-on::after-request="document.getElementById('insight-form').classList.add('hidden'); location.reload()">
+        <div class="form-group">
+            <label>核心洞察</label>
+            <input name="insight" placeholder="如：用户需要碎片化的诗歌学习方式" class="input-wide" required>
+        </div>
+        <div class="form-group">
+            <label>支撑痛点（可多选）</label>
+            <select name="supporting_pains" multiple size="4" class="input-wide">
+                {% for p in pains %}
+                <option value="{{ p.problem }}">#{{ loop.index }} {{ p.problem }}</option>
+                {% endfor %}
+            </select>
+            <span class="text-sm text-muted">按住 Ctrl 可多选</span>
+        </div>
+        <div class="form-group">
+            <label>洞察含义</label>
+            <input name="meaning" placeholder="这个洞察意味着什么，对产品有什么启示" class="input-wide">
+        </div>
+        <div class="form-group">
+            <label>状态</label>
+            <select name="status"><option value="假设">假设</option><option value="待验证">待验证</option><option value="已验证">已验证</option></select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('insight-form').classList.add('hidden')">取消</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleAndScroll(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('hidden');
+    if (!el.classList.contains('hidden')) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    }
+}
+</script>
+{% endblock %}

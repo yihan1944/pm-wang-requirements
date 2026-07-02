@@ -1,0 +1,254 @@
+<!-- AI Dialog - include this in each section template -->
+<div id="ai-dialog" class="dialog-overlay hidden">
+    <div class="dialog-box">
+        <div class="dialog-header">
+            <h3>🤖 AI 辅助调研</h3>
+            <button class="btn-icon" onclick="closeAiDialog()">✕</button>
+        </div>
+        <div class="dialog-body">
+            <!-- 场景模块：用户画像选择 -->
+            <div id="ai-profile-select" class="form-group hidden">
+                <label>选择用户画像（AI 将基于此生成场景）</label>
+                <select id="ai-profile-id" class="input-wide" onchange="onAiProfileChange()">
+                    <option value="0">-- 请选择用户画像 --</option>
+                </select>
+                <div id="ai-profile-info" class="text-muted text-sm mt-1"></div>
+            </div>
+            <!-- 动机模块：场景选择 -->
+            <div id="ai-scene-select" class="form-group hidden">
+                <label>选择场景（AI 将基于此生成动机）</label>
+                <select id="ai-scene-id" class="input-wide" onchange="onAiSceneChange()">
+                    <option value="0">-- 请选择场景 --</option>
+                </select>
+                <div id="ai-scene-info" class="text-muted text-sm mt-1"></div>
+            </div>
+            <div class="form-group">
+                <label>描述你的调研目标</label>
+                <textarea id="ai-prompt" rows="3" class="input-wide"></textarea>
+            </div>
+            <div id="ai-loading" class="hidden ai-loading">
+                <div class="spinner"></div>
+                <span>AI 正在生成...</span>
+            </div>
+            <div id="ai-status" class="text-muted text-sm"></div>
+            <div id="ai-result" class="hidden mt-1">
+                <label class="text-sm text-muted">✅ AI 生成结果（可编辑后确认）：</label>
+                <div id="ai-result-fields"></div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button id="ai-gen-btn" class="btn btn-primary btn-sm" onclick="generateAi()">生成</button>
+            <button id="ai-confirm-btn" class="btn btn-success btn-sm hidden" onclick="confirmAi()">✓ 确认填入</button>
+            <button class="btn btn-ghost btn-sm" onclick="closeAiDialog()">取消</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let aiSection = '';
+const aiFieldMap = {};
+const aiPlaceholders = {};
+let profilesData = [];
+
+function toggleAndScroll(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('hidden');
+    if (!el.classList.contains('hidden')) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    }
+}
+
+function openAiDialog(section) {
+    aiSection = section;
+    document.getElementById('ai-dialog').classList.remove('hidden');
+    document.getElementById('ai-prompt').value = '';
+    document.getElementById('ai-prompt').placeholder = aiPlaceholders[section] || '描述你的调研目标...';
+    document.getElementById('ai-result').classList.add('hidden');
+    document.getElementById('ai-status').textContent = '';
+    document.getElementById('ai-loading').classList.add('hidden');
+    document.getElementById('ai-gen-btn').classList.remove('hidden');
+    document.getElementById('ai-confirm-btn').classList.add('hidden');
+
+    // 场景模块：显示用户画像选择
+    const profileSelect = document.getElementById('ai-profile-select');
+    if (section === 'scene' && profilesData && profilesData.length > 0) {
+        profileSelect.classList.remove('hidden');
+        const select = document.getElementById('ai-profile-id');
+        select.innerHTML = '<option value="0">-- 请选择用户画像 --</option>';
+        profilesData.forEach(p => {
+            select.innerHTML += `<option value="${p.id}">${p.target_user}</option>`;
+        });
+        document.getElementById('ai-profile-info').textContent = '';
+    } else {
+        profileSelect.classList.add('hidden');
+    }
+
+    // 动机模块：显示场景选择
+    const sceneSelect = document.getElementById('ai-scene-select');
+    if (section === 'job' && typeof scenesData !== 'undefined' && scenesData.length > 0) {
+        sceneSelect.classList.remove('hidden');
+        const select = document.getElementById('ai-scene-id');
+        select.innerHTML = '<option value="0">-- 请选择场景 --</option>';
+        scenesData.forEach(s => {
+            select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+        });
+        document.getElementById('ai-scene-info').textContent = '';
+    } else {
+        sceneSelect.classList.add('hidden');
+    }
+
+    document.getElementById('ai-prompt').focus();
+}
+
+function onAiProfileChange() {
+    const userId = document.getElementById('ai-profile-id').value;
+    if (userId && userId !== '0') {
+        const profile = profilesData.find(p => p.id == userId);
+        if (profile) {
+            document.getElementById('ai-profile-info').innerHTML = '📌 <strong>' + profile.target_user + '</strong>，' + (profile.age || '') + '，' + (profile.occupation || '') + '，' + (profile.region || '');
+        }
+    } else {
+        document.getElementById('ai-profile-info').textContent = '';
+    }
+}
+
+function onAiSceneChange() {
+    const sceneId = document.getElementById('ai-scene-id').value;
+    if (sceneId && sceneId !== '0') {
+        const scene = scenesData.find(s => s.id == sceneId);
+        if (scene) {
+            document.getElementById('ai-scene-info').innerHTML = '📌 <strong>' + scene.name + '</strong>，' + (scene.time_desc || '') + '，' + (scene.location || '') + '，' + (scene.user_goal || '');
+        }
+    } else {
+        document.getElementById('ai-scene-info').textContent = '';
+    }
+}
+
+function closeAiDialog() {
+    document.getElementById('ai-dialog').classList.add('hidden');
+}
+
+async function generateAi() {
+    let prompt = document.getElementById('ai-prompt').value.trim();
+    if (!prompt) {
+        document.getElementById('ai-status').textContent = '⚠️ 请输入调研描述';
+        return;
+    }
+
+    // 场景模块：注入选中的用户画像作为背景
+    if (aiSection === 'scene' && profilesData) {
+        const userId = document.getElementById('ai-profile-id').value;
+        if (userId && userId !== '0') {
+            const profile = profilesData.find(p => p.id == userId);
+            if (profile) {
+                prompt = `用户背景：${profile.target_user}，年龄${profile.age || '未知'}，${profile.gender || ''}，${profile.occupation || ''}，${profile.region || ''}，特征：${profile.typical_traits || '无'}。基于此用户画像，${prompt}`;
+            }
+        }
+    }
+
+    // 动机模块：注入选中的场景作为背景
+    if (aiSection === 'job' && typeof scenesData !== 'undefined') {
+        const sceneId = document.getElementById('ai-scene-id').value;
+        if (sceneId && sceneId !== '0') {
+            const scene = scenesData.find(s => s.id == sceneId);
+            if (scene) {
+                prompt = `场景背景：${scene.name}，时间：${scene.time_desc || '未知'}，地点：${scene.location || '未知'}，触发事件：${scene.trigger_event || '未知'}，用户行为：${scene.user_behavior || '未知'}，用户目标：${scene.user_goal || '未知'}。基于此场景，${prompt}`;
+            }
+        }
+    }
+
+    document.getElementById('ai-loading').classList.remove('hidden');
+    document.getElementById('ai-status').textContent = '';
+    document.getElementById('ai-result').classList.add('hidden');
+    document.getElementById('ai-gen-btn').disabled = true;
+    document.getElementById('ai-gen-btn').textContent = '生成中...';
+
+    try {
+        const resp = await fetch('/api/ai-assist', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({prompt, section: aiSection}),
+        });
+        const data = await resp.json();
+
+        document.getElementById('ai-loading').classList.add('hidden');
+
+        if (data.error) {
+            document.getElementById('ai-status').textContent = '❌ ' + data.error;
+            document.getElementById('ai-gen-btn').disabled = false;
+            document.getElementById('ai-gen-btn').textContent = '重新生成';
+            return;
+        }
+
+        if (data.raw) {
+            document.getElementById('ai-status').textContent = '⚠️ AI 返回了非结构化数据，请手动编辑';
+        }
+
+        const labels = aiFieldMap[aiSection] || {};
+        let html = '<div class="ai-result-form">';
+        for (const [key, label] of Object.entries(labels)) {
+            const val = data[key] || '';
+            html += `<div class="form-row"><label class="card-label">${label}</label><input class="ai-field" data-field="${key}" value="${escapeHtml(val)}"></div>`;
+        }
+        html += '</div>';
+        document.getElementById('ai-result-fields').innerHTML = html;
+        document.getElementById('ai-result').classList.remove('hidden');
+        document.getElementById('ai-status').textContent = '✅ 生成完成，请检查后确认';
+        document.getElementById('ai-gen-btn').classList.add('hidden');
+        document.getElementById('ai-confirm-btn').classList.remove('hidden');
+    } catch(e) {
+        document.getElementById('ai-loading').classList.add('hidden');
+        document.getElementById('ai-status').textContent = '❌ 请求失败: ' + e.message;
+        document.getElementById('ai-gen-btn').disabled = false;
+        document.getElementById('ai-gen-btn').textContent = '重新生成';
+    }
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function confirmAi() {
+    const fields = document.querySelectorAll('.ai-field');
+    // section name → form id mapping
+    const formIdMap = {
+        who_profile: 'profile-form',
+        who_segment: 'segment-form',
+        scene: 'scenario-form',
+        job: 'jtbd-form',
+        pain: 'pain-form',
+        insight: 'insight-form',
+        opportunity: 'opp-form',
+    };
+    const formId = formIdMap[aiSection] || aiSection.replace(/_/g, '-') + '-form';
+    const form = document.getElementById(formId);
+    if (form) {
+        form.classList.remove('hidden');
+        fields.forEach(f => {
+            const input = form.querySelector(`[name="${f.dataset.field}"]`);
+            if (input) input.value = f.value;
+        });
+
+        // 场景模块：自动关联选中的用户画像
+        if (aiSection === 'scene') {
+            const userId = document.getElementById('ai-profile-id').value;
+            const userSelect = form.querySelector('[name="target_user_id"]');
+            if (userId && userId !== '0' && userSelect) {
+                userSelect.value = userId;
+            }
+        }
+
+        // 动机模块：自动关联选中的场景
+        if (aiSection === 'job') {
+            const sceneId = document.getElementById('ai-scene-id').value;
+            const sceneSelect = form.querySelector('[name="scene_id"]');
+            if (sceneId && sceneId !== '0' && sceneSelect) {
+                sceneSelect.value = sceneId;
+            }
+        }
+    }
+    closeAiDialog();
+}
+</script>
